@@ -17,7 +17,9 @@ class ClientController extends Controller
      */
     public function index()
     {
-        echo "List all Client";
+        $data['data'] = ClientModel::get();
+        $data['message'] = "Data fetched Successfully.";
+        return response()->json($data, 200);
     }
 
     /**
