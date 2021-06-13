@@ -95,7 +95,40 @@ class ClientController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $input = $request->all();
+        $duplicateCliname = ClientModel::where('clientName', '=', $input['clientName'])
+                            ->where('id', '!=', $id)->exists();
+        $duplicateEmamil = ClientModel::where('email', '=', $input['email'])
+                            ->where('id', '!=', $id)->exists();
+        $duplicateMobile = ClientModel::where('mobile', '=', $input['mobile'])
+                            ->where('id', '!=', $id)->exists();
+        if ($duplicateCliname || $duplicateEmamil || $duplicateMobile) {
+            $data['data'] = [];
+            if($duplicateCliname)
+            $data['data'][] = "ClientName already exists.";
+            if($duplicateEmamil)
+            $data['data'][] = "Email already exists.";
+            if($duplicateMobile)
+            $data['data'][] = "Mobile already exists.";
+
+            $data['message'] = 'Client already exists.';
+            return response()->json($data, 409);    
+        } else {
+            $client = ClientModel::find($id);
+            if(trim($input['password']) != '')
+            {
+                $input['password'] = Hash::make($input['password']);
+                $client->password = $input['password'];
+            }
+            if(trim($input['email']) != '')
+            $client->email = $input['email'];
+            if(trim($input['mobile']) != '')
+            $client->mobile = $input['mobile'];
+            $client->save();
+            $data['data'] = array();
+            $data['message'] = "Client updated Successfully.";
+            return response()->json($data, 200);
+        }
     }
 
     /**
@@ -106,6 +139,19 @@ class ClientController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $client = ClientModel::find($id);
+        if(!$client) {
+            $data['message'] = "Unable to delete Client. Please try again.";
+            return response()->json($data, 500);
+        }
+        $delete = $client->delete();
+        $data['data'] = array();
+        if($delete) {
+            $data['message'] = "Client deleted Successfully.";
+            return response()->json($data, 200);
+        } else {
+            $data['message'] = "Unable to delete Client. Please try again.";
+            return response()->json($data, 500);
+        }
     }
 }
